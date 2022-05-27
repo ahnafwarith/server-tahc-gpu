@@ -12,7 +12,7 @@ app.use(express.json());
 
 // MongoDB
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.cfemw.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
@@ -22,15 +22,21 @@ async function run() {
         await client.connect()
         // Collections
         const gpusCollection = client.db('tahc-re-lab').collection('gpus')
-
+        const bookingCollection = client.db("tahc-re-lab").collection("bookings")
         // Verify Admin custom middleware
 
 
         // ----------------------------- //
         // CRUD operations
         // -------------------- //
-
-        // loading parts
+        // Loading one part based on id
+        app.get('/parts/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const result = await gpusCollection.findOne(filter)
+            res.send(result)
+        })
+        // Loading all parts
         app.get('/parts', async (req, res) => {
             const result = await gpusCollection.find().toArray()
             res.send(result)
