@@ -83,7 +83,6 @@ async function run() {
         // User: delete one user
         app.delete('/delete/user/:email', async (req, res) => {
             const email = req.params.email;
-            console.log(email)
             const query = { email: email }
             const result = await userCollection.deleteOne(query);
             res.send(result)
@@ -105,6 +104,17 @@ async function run() {
             const isAdmin = user.role === 'admin'
             // Handling with true false
             res.send({ admin: isAdmin })
+        })
+        app.put('/updateuser/:email', async (req, res) => {
+            const email = req.params.email;
+            const userData = req.body;
+            const options = { upsert: true };
+            const filter = { email: email };
+            const updateDoc = {
+                $set: userData
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options)
+            res.send(result)
         })
 
         // Parts: Loading one part based on id
