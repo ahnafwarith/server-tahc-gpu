@@ -47,7 +47,17 @@ async function run() {
         const reviewCollection = client.db("tahc-re-lab").collection("reviews")
         const userCollection = client.db("tahc-re-lab").collection("users")
         // Verify Admin custom middleware
-
+        const verifyAdmin = async (req, res, next) => {
+            // Checking if the API requesting email has role of admin
+            const requester = req.decoded.email
+            const requesterAccount = await userCollection.findOne({ email: requester })
+            if (requesterAccount.role === 'admin') {
+                next()
+            }
+            else {
+                res.status(403).send({ message: 'Unauthorized' })
+            }
+        }
 
         // ----------------------------- //
         // CRUD operations
@@ -70,6 +80,32 @@ async function run() {
             const result = await userCollection.find().toArray();
             res.send(result)
         })
+        // User: delete one user
+        app.delete('/delete/user/:email', async (req, res) => {
+            const email = req.params.email;
+            console.log(email)
+            const query = { email: email }
+            const result = await userCollection.deleteOne(query);
+            res.send(result)
+        })
+        // User: Make admin
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: 'admin' }
+            };
+            const result = await userCollection.updateOne(filter, updateDoc)
+            res.send(result)
+        })
+        // User: Load admin with email query
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email
+            const user = await userCollection.findOne({ email: email })
+            const isAdmin = user.role === 'admin'
+            // Handling with true false
+            res.send({ admin: isAdmin })
+        })
 
         // Parts: Loading one part based on id
         app.get('/parts/:id', async (req, res) => {
@@ -84,16 +120,16 @@ async function run() {
             res.send(result)
         })
         // Parts: Adding new part
-        app.post('/parts', async (req, res) => {
+        app.post('/parts', verifyJWT, verifyAdmin, async (req, res) => {
             const part = req.body
             const result = await gpusCollection.insertOne(part);
             res.send(result)
         })
         // Parts: Deleting a part
-        app.delete('/parts/:id', async (req, res) => {
+        app.delete('/parts/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id
-            const filter = { _id: ObjectId(id) }
-            const result = await gpusCollection.deleteOne(filter)
+            const query = { _id: ObjectId(id) }
+            const result = await gpusCollection.deleteOne(query)
             res.send(result)
         })
 
@@ -127,8 +163,8 @@ async function run() {
         // Deleting a booking
         app.delete('/deletebooking/:email', async (req, res) => {
             const email = req.params.email;
-            const filter = { email: email };
-            const result = await bookingCollection.deleteOne(filter)
+            const query = { email: email };
+            const result = await bookingCollection.deleteOne(query)
             res.send(result)
         })
 
