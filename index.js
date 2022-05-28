@@ -160,10 +160,17 @@ async function run() {
             // console.log('authHeader', authorization)
 
         })
-        // Deleting a booking
+        // Deleting a booking via email for user
         app.delete('/deletebooking/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
+            const result = await bookingCollection.deleteOne(query)
+            res.send(result)
+        })
+        // Deleting a booking via id for admin
+        app.delete('/deleteidbooking/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
             const result = await bookingCollection.deleteOne(query)
             res.send(result)
         })
