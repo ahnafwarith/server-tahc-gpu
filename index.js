@@ -71,18 +71,23 @@ async function run() {
             const result = await bookingCollection.insertOne(booking);
             res.send(result);
         })
-
         // Bookings: Getting all booking
         app.get('/bookings', async (req, res) => {
             const result = await bookingCollection.find().toArray();
             res.send(result);
         })
-
         // Bookings: Loading bookings for a particular user via email
         app.get('/bookings/:email', async (req, res) => {
             const email = req.params.email;
             const filter = { email: email };
             const result = await bookingCollection.find(filter).toArray();
+            res.send(result)
+        })
+        // Deleting a booking
+        app.delete('/deletebooking/:email', async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const result = await bookingCollection.deleteOne(filter)
             res.send(result)
         })
 
