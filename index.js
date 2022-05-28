@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-// const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
@@ -45,12 +45,26 @@ async function run() {
         const gpusCollection = client.db('tahc-re-lab').collection('gpus')
         const bookingCollection = client.db("tahc-re-lab").collection("bookings")
         const reviewCollection = client.db("tahc-re-lab").collection("reviews")
+        const userCollection = client.db("tahc-re-lab").collection("users")
         // Verify Admin custom middleware
 
 
         // ----------------------------- //
         // CRUD operations
         // -------------------- //
+        // User: upsert user entry
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const options = { upsert: true }
+            const filter = { email: email };
+            const updateDoc = {
+                $set: user
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options)
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send({ result, token })
+        })
 
         // Parts: Loading one part based on id
         app.get('/parts/:id', async (req, res) => {
@@ -92,6 +106,8 @@ async function run() {
         // Bookings: Loading bookings for a particular user via email
         app.get('/bookings/:email', async (req, res) => {
             const email = req.params.email;
+            const authorization = req.headers.authorization;
+            console.log('authHeader', authorization)
             const filter = { email: email };
             const result = await bookingCollection.find(filter).toArray();
             res.send(result)
