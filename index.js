@@ -65,6 +65,11 @@ async function run() {
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
             res.send({ result, token })
         })
+        // User: get all users
+        app.get('/users', async (req, res) => {
+            const result = await userCollection.find().toArray();
+            res.send(result)
+        })
 
         // Parts: Loading one part based on id
         app.get('/parts/:id', async (req, res) => {
@@ -104,13 +109,20 @@ async function run() {
             res.send(result);
         })
         // Bookings: Loading bookings for a particular user via email
-        app.get('/bookings/:email', async (req, res) => {
+        app.get('/bookings/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
-            const authorization = req.headers.authorization;
-            console.log('authHeader', authorization)
-            const filter = { email: email };
-            const result = await bookingCollection.find(filter).toArray();
-            res.send(result)
+            const decodedEmail = req.decoded.email;
+            if (email === decodedEmail) {
+                const filter = { email: email };
+                const result = await bookingCollection.find(filter).toArray();
+                return res.send(result)
+            }
+            else {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            // const authorization = req.headers.authorization;
+            // console.log('authHeader', authorization)
+
         })
         // Deleting a booking
         app.delete('/deletebooking/:email', async (req, res) => {
