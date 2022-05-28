@@ -64,6 +64,19 @@ async function run() {
             const result = await gpusCollection.find().toArray()
             res.send(result)
         })
+        // Parts: Adding new part
+        app.post('/parts', async (req, res) => {
+            const part = req.body
+            const result = await gpusCollection.insertOne(part);
+            res.send(result)
+        })
+        // Parts: Deleting a part
+        app.delete('/parts/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const result = await gpusCollection.deleteOne(filter)
+            res.send(result)
+        })
 
         // Bookings: Posting a booking
         app.post('/bookings', async (req, res) => {
