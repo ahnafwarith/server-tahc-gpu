@@ -105,15 +105,18 @@ async function run() {
             // Handling with true false
             res.send({ admin: isAdmin })
         })
+        // User: Update User
         app.put('/updateuser/:email', async (req, res) => {
             const email = req.params.email;
             const userData = req.body;
             const options = { upsert: true };
             const filter = { email: email };
+            console.log(userData, email)
             const updateDoc = {
                 $set: userData
             };
             const result = await userCollection.updateOne(filter, updateDoc, options)
+            console.log(result)
             res.send(result)
         })
 
@@ -184,6 +187,13 @@ async function run() {
             const result = await bookingCollection.deleteOne(query)
             res.send(result)
         })
+        // Bookings for one particular id
+        app.get('/idbookings/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const result = await bookingCollection.findOne(filter)
+            res.send(result)
+        })
 
         // Reviews : posting a review
         app.post('/reviews', async (req, res) => {
@@ -197,6 +207,17 @@ async function run() {
             res.send(result)
         })
 
+        //Payment intent
+        // app.post('/payment-create-intent', async (req, res) => {
+        //     const service = req.body
+        //     const price = service.price * 100
+        //     const paymentIntent = await stripe.paymentIntents.create({
+        //         amount: price,
+        //         currency: "usd",
+        //         payment_method_types: ["card"]
+        //     })
+        //     res.send({ clientSecret: paymentIntent.client_secret })
+        // })
     }
     finally {
 
